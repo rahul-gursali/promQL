@@ -1,0 +1,70 @@
+## For Infra Monitoring ##
+
+# CPU usage
+100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+# Memory Usage Percentage
+(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+# Disk Usage Percentage
+100 - ((node_filesystem_avail_bytes{fstype!="tmpfs", mountpoint!~"/run.*"} * 100) / node_filesystem_size_bytes)
+
+# Disk Read IOPS
+rate(node_disk_reads_completed_total[5m])
+
+# Disk Write IOPS
+rate(node_disk_writes_completed_total[5m])
+
+# Disk Read Throughput
+rate(node_disk_read_bytes_total[5m])
+
+# Disk Write Throughput
+rate(node_disk_written_bytes_total[5m])
+
+# Network Receive Bandwidth
+rate(node_network_receive_bytes_total{device!~"lo"}[5m])
+
+# Network Transmit Bandwidth
+rate(node_network_transmit_bytes_total{device!~"lo"}[5m])
+
+---------------------------------------------------------------------------------
+
+## For K8s Monitoring ##
+
+# Pod CPU Usage
+rate(container_cpu_usage_seconds_total{container!="",pod!=""}[5m])
+
+# Pod Memory Usage
+container_memory_usage_bytes{container!="",pod!=""}
+
+# Pod Restarts
+increase(kube_pod_container_status_restarts_total[5m])
+
+# Pod Not Ready
+kube_pod_status_ready{condition="false"}
+
+# Kubernetes Node Not Ready
+kube_node_status_condition{condition="Ready", status="false"}
+
+--------------------------------------------------------------------------------
+
+## Application and Service Monitoring ##
+
+# HTTP Request Rate
+rate(http_requests_total[5m])
+
+# HTTP 5xx Error Rate
+rate(http_requests_total{status=~"5.."}[5m])
+
+# HTTP Request Duration (95th Percentile)
+histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+# Service Down
+up == 0
+
+# Targets Missing Metrics
+absent(node_cpu_seconds_total)
+
+# Prometheus Scrape Errors
+rate(prometheus_scrape_failed_total[5m])
+ 
